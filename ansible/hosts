@@ -1,0 +1,31 @@
+#localhost ansible_python_interpreter=python2  # need to avoid python3 default on some linux boxes
+
+[vagrant]
+docker_host_vagrant ansible_ssh_host=docker-host-vagrant.mtnsat.io
+
+[vagrant:vars]
+ansible_ssh_user=vagrant
+ansible_ssh_pass=vagrant
+
+[facilities:children]
+integration
+ships
+centrals
+
+[integration]
+myinteg
+10.200.96.51
+
+[production]
+
+[integration:vars]
+NODE_ENV='integration'
+
+[ships]
+
+
+[ships:vars]
+
+[centrals]
+
+[centrals:vars]

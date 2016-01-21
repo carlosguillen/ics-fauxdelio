@@ -1,0 +1,12 @@
+# env vars -> will soon be removed to be created/populated at deployment time
+delete_containers: false
+present: 'present'
+started: 'started'
+reloaded: 'reloaded'
+min_ansible_version: '1.9.2'
+
+app_name: 'fauxdelio'
+registry_url: 'docker-hub-int.mtnsat.io'
+#registry_url: 'docker-hub.mtnsat.io'
+
+app_image: "{{ registry_url }}/{{ app_name }}:{{ app_version }}"
