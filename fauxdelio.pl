@@ -5,6 +5,8 @@ use warnings;
 use Data::Faker;
 use Data::Dumper;
 use Getopt::Long;
+use Const::Fast;
+use POSIX 'strftime';
 use POE qw(Component::Server::TCP Filter::Reference Filter::Line);
 
 BEGIN {
@@ -16,28 +18,27 @@ $|++;
 #############################################################
 # hex values for start/end and delimiter
 #############################################################
-use constant STX => chr(2);
-use constant ETX => chr(3);
-use constant US => chr(31);
+const my $STX => chr(2);
+const my $ETX => chr(3);
+const my $US => chr(31);
 
 my $counter = 0;
 my $lastSent = 0;
 my $connected = 0;
-my ($delay, $port, @requests);
+my ($delay, $port, @requests, $manifest, $count);
 
-open FILE, "fidelioManifest.dat";
-my $manifest = <FILE>;
-close FILE;
 
 my $postingResponse = <DATA>;
 
 my $opts = GetOptions(
   'd|delay=s'   => \$delay,
-  'p|port=s'    => \$port
+  'p|port=s'    => \$port,
+  'c|count=s'   => \$count
 );
 
 $delay = 1 unless defined $delay;
 $port = 2019 unless defined $port;
+$count = 10 unless defined $count;
 
 POE::Component::Server::TCP->new(
   Port => $port,
@@ -45,7 +46,7 @@ POE::Component::Server::TCP->new(
     my ($syscall_name, $error_num, $error_str) = @_[ARG0..ARG2];
     say "Got client error $error_str";
   },
-  ClientFilter => POE::Filter::Line->new(Literal => ETX),
+  ClientFilter => POE::Filter::Line->new(Literal => $ETX),
   ClientConnected => sub {
     my ($kernel, $heap, $request) = @_[KERNEL, HEAP, ARG0];
     say "got a connection from client";
@@ -65,7 +66,6 @@ POE::Component::Server::TCP->new(
     my ($kernel, $heap, $request) = @_[KERNEL, HEAP, ARG0];
 
     $counter++;
-    say "Request #$counter";
 
     if($request =~ m/Posting/) {
       $kernel->yield('trans_response' => $request);
@@ -85,7 +85,8 @@ POE::Component::Server::TCP->new(
 #
 sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
-    say "sending manifest";
+    my $manifest = buildManifest();
+    say "sending $count records of passenger manifest...";
 
     if ($connected){
       $heap->{client}->put($manifest);
@@ -99,7 +100,7 @@ sub manifestResponse {
 sub transResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
 
-    $request =~ /RQN=(\d+)(?{US})/;
+    $request =~ /RQN=(\d+)(?{$US})/;
     my $number = $1 || 000000;
     my $new_response = $postingResponse;
     $new_response =~ s/XXXXXX/$number/g;
@@ -114,10 +115,46 @@ sub sendIt {
 
     if (@requests > 0 && $connected == 1) {
       my $new_response = pop(@requests);
-      say "Sending response...". scalar @requests ." left";
       $heap->{client}->put($new_response);
     }
     $kernel->delay('send_it' => $delay);
+}
+
+sub buildManifest {
+
+    my $faker = Data::Faker->new();
+    my $today = POSIX::strftime("%s", localtime);
+    my $now = POSIX::strftime("%Y-%m-%d %T%z", localtime);
+
+    my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$now");
+    my $record = $STX.join($US, @headerFields);
+
+    foreach my $cntr (1..$count){
+        my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
+        my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
+        my $minor = 'N';
+        my $balance = $cntr + 1000;
+        my @arr = (
+                "ACT=".$CorP,
+                "FST=".$faker->first_name,
+                "LST=".$faker->last_name,
+                "DOB=1981-01-01",
+                "CAB=ABC".$cntr,
+                "EMB=".$now,
+                "DIS=$expiration",
+                "ACI=$cntr",
+                "EML=".$faker->email,
+                "GND=".$gender,
+                "MIN=".$minor,
+                "BAL=$balance",
+                "CLM=$balance"
+            );
+        $record .= $US.join($US, @arr);
+    }
+
+    $record .= $ETX."_";
+
+    return $record;
 }
 
 say "Starting server on port $port";
