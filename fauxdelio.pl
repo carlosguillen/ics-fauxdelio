@@ -150,7 +150,7 @@ sub buildManifest {
                 "CLM=$balance"
             );
         $record .= $US.join($US, @arr);
-	print join(',', @arr), "\n";
+	say join(',', @arr), "\n";
     }
 
     $record .= $ETX."_";
