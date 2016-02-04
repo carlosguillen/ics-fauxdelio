@@ -124,6 +124,7 @@ sub buildManifest {
 	
     my ($request) = @_;
     my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
+
     my $faker = Data::Faker->new();
     my $today = POSIX::strftime("%s", localtime);
     my $now = POSIX::strftime("%Y-%m-%d %T%z", localtime);
@@ -131,6 +132,8 @@ sub buildManifest {
     my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$now");
     my $record = $STX.join($US, @headerFields);
 
+    $letter = '' unless defined $letter;
+ 
     foreach my $cntr (1..$count){
         my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
         my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
