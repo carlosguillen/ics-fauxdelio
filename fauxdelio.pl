@@ -139,7 +139,7 @@ sub buildManifest {
         my @arr = (
                 "ACT=".$CorP,
                 "FST=".$faker->first_name,
-                "LST=".$leter.$faker->last_name,
+                "LST=".$letter.$faker->last_name,
                 "DOB=1981-01-01",
                 "CAB=ABC".$cntr,
                 "EMB=".$now,
