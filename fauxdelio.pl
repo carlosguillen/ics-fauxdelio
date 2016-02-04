@@ -85,7 +85,7 @@ POE::Component::Server::TCP->new(
 #
 sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
-    my $manifest = buildManifest();
+    my $manifest = buildManifest($request);
     say "sending $count records of passenger manifest...";
 
     if ($connected){
@@ -121,7 +121,9 @@ sub sendIt {
 }
 
 sub buildManifest {
-
+	
+    my ($request) = @_;
+    my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
     my $faker = Data::Faker->new();
     my $today = POSIX::strftime("%s", localtime);
     my $now = POSIX::strftime("%Y-%m-%d %T%z", localtime);
@@ -137,7 +139,7 @@ sub buildManifest {
         my @arr = (
                 "ACT=".$CorP,
                 "FST=".$faker->first_name,
-                "LST=".$faker->last_name,
+                "LST=".$leter.$faker->last_name,
                 "DOB=1981-01-01",
                 "CAB=ABC".$cntr,
                 "EMB=".$now,
