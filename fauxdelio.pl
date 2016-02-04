@@ -115,6 +115,7 @@ sub sendIt {
 
     if (@requests > 0 && $connected == 1) {
       my $new_response = pop(@requests);
+      say "sending message to client";
       $heap->{client}->put($new_response);
     }
     $kernel->delay('send_it' => $delay);
