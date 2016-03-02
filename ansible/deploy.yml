@@ -16,9 +16,6 @@
         {%  if app_version is not defined %}
         'Need app_version specified'
         {% endif %}
-        {% if app_version is defined and app_version == 'latest' %}
-        Do not use app_version='latest' ; Specify a version tag.
-        {% endif %}
         **********************************
     when: deploy_host is undefined
           or
@@ -31,8 +28,6 @@
           app_version is none
           or
           app_version|trim == ''
-          or 
-          app_version == 'latest'
 
 - hosts: 
     - "{{ deploy_host }}"
@@ -46,8 +41,6 @@
     with_items:
       - "Ansible version required: {{ ansible_ver_required }}"
       - "Current ansible version:  {{ ansible_version.full }}"
-    #when: ansible_version.full < ansible_ver_required
-    #when: ansible_version.full != ansible_ver_required
     when: ansible_version.full | version_compare( min_ansible_version, '<' )
 
   - name: set delete vars
@@ -64,7 +57,7 @@
     apt:
       name: python-pip
       state: present
-      
+
   - name: pip install docker-py
     pip:
       name: docker-py==1.1.0
@@ -77,7 +70,7 @@
     shell: |
       docker pull "{{ registry_url }}/{{ app_name }}:{{ app_version }}"
     when: not delete_containers
-   
+
   #-------------------------
   # stop needed containers first
   #-------------------------
