@@ -122,7 +122,7 @@ sub sendIt {
 }
 
 sub buildManifest {
-	
+
     my ($request) = @_;
     my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
 
@@ -134,7 +134,7 @@ sub buildManifest {
     my $record = $STX.join($US, @headerFields);
 
     $letter = '' unless defined $letter;
- 
+
     foreach my $cntr (1..$count){
         my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
         my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
@@ -156,7 +156,7 @@ sub buildManifest {
                 "CLM=$balance"
             );
         $record .= $US.join($US, @arr);
-	say join(',', @arr), "\n";
+        say join(',', @arr), "\n";
     }
 
     $record .= $ETX."_";

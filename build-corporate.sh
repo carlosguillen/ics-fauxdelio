@@ -25,7 +25,8 @@ in_docker_container='unknown'
 #---------------------------------------
 [[ $docker_hub_vagrant == 'true' ]] && {
   #REGISTRY_URL='192.168.60.52'
-  REGISTRY_URL='docker-hub-vagrant.mtnsat.io'
+  #REGISTRY_URL='docker-hub-vagrant.mtnsat.io'
+  echo "$REGISTRY_URL"
 }
 
 #---------------------------------------
@@ -38,7 +39,7 @@ in_docker_container='unknown'
   #do not pull if the registry does not have it yet
   [[ $app_exists == '[]' ]] || {
     # Pull the latest image to ensure that the build cache is primed
-    echo "${REGISTRY_URL}"/"${APP_NAME}"
+    echo "Pulling latest image ${REGISTRY_URL}"/"${APP_NAME}"
     docker pull "${REGISTRY_URL}"/"${APP_NAME}"
   }
 }
@@ -53,12 +54,14 @@ in_docker_container='unknown'
 }
 echo "Build num:${BUILD_NUMBER}"
 
+echo "{ \"build_number\": \"${BUILD_NUMBER}\" }" > build_number.json
+
 #---------------------------------------
 # include build number in the image as a normal text file
 # the app can use build number information in its health checks
 #---------------------------------------
-echo "${BUILD_NUMBER}" > build_number
 
+# build images
 docker build -t "${REGISTRY_URL}"/"${APP_NAME}":v"${BUILD_NUMBER}" .
 docker build -t "${REGISTRY_URL}"/"${APP_NAME}":latest .
 
@@ -67,3 +70,7 @@ docker build -t "${REGISTRY_URL}"/"${APP_NAME}":latest .
   docker push "${REGISTRY_URL}"/"${APP_NAME}":v"${BUILD_NUMBER}"
   docker push "${REGISTRY_URL}"/"${APP_NAME}":latest
 }
+
+# remove BUILD_NUMBER tagged imagess as they are not needed anymore
+docker rmi -f "${REGISTRY_URL}"/"${APP_NAME}":v"${BUILD_NUMBER}"
+
