@@ -91,7 +91,7 @@
       name: "{{ app_name }}"
       state: "{{ started }}"
       image: "{{ app_image }}"
-      command: perl /opt/fauxdelio/fauxdelio.pl -d 1 -c 30
+      command: perl /opt/fauxdelio/fauxdelio.pl -d 1 -c 100
       expose:
         - 2019
       ports:

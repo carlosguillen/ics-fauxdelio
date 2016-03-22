@@ -6,6 +6,7 @@ use Data::Faker;
 use Data::Dumper;
 use Getopt::Long;
 use Const::Fast;
+use Data::UUID;
 use POSIX 'strftime';
 use POE qw(Component::Server::TCP Filter::Reference Filter::Line);
 
@@ -87,6 +88,7 @@ sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
     my $manifest = buildManifest($request);
     say "sending $count records of passenger manifest...";
+    say "$manifest\n";
 
     if ($connected){
       $heap->{client}->put($manifest);
@@ -123,36 +125,47 @@ sub sendIt {
 
 sub buildManifest {
 
-    my ($request) = @_;
-    my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
+    #my ($request) = @_;
+    #my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
 
-    my $faker = Data::Faker->new();
     my $today = POSIX::strftime("%s", localtime);
     my $now = POSIX::strftime("%Y-%m-%d %T%z", localtime);
 
     my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$now");
     my $record = $STX.join($US, @headerFields);
 
-    $letter = '' unless defined $letter;
+    #$letter = '' unless defined $letter;
+
+    my $ug    = Data::UUID->new;
 
     foreach my $cntr (1..$count){
+        my $faker = Data::Faker->new();
         my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
         my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
         my $minor = 'N';
         my $balance = $cntr + 1000;
+        my $uuid  = $ug->create();
+        my $str   = $ug->to_string( $uuid );
+        my $folio = $str;
         my @arr = (
+                "ACI=$folio",
                 "ACT=".$CorP,
-                "FST=".$faker->first_name,
-                "LST=".$letter.$faker->last_name,
-                "DOB=1981-01-01",
-                "CAB=ABC".$cntr,
+                "ENB=1",
+                "CAB=".$faker->username,
                 "EMB=".$now,
                 "DIS=$expiration",
-                "ACI=$cntr",
+                "DOB=1981-01-01",
+                "BAL=$balance",
+                "FST=".$faker->first_name,
+                "LST=".$faker->last_name,
                 "EML=".$faker->email,
                 "GND=".$gender,
                 "MIN=".$minor,
-                "BAL=$balance",
+                "ADD=".$faker->street_address,
+                "CTY=".$faker->city,
+                "STT=FL",
+                "PIN=$folio",
+                "AWD=INT100",
                 "CLM=$balance"
             );
         $record .= $US.join($US, @arr);
