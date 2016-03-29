@@ -41,6 +41,9 @@ $delay = 1 unless defined $delay;
 $port = 2019 unless defined $port;
 $count = 10 unless defined $count;
 
+
+buildManifest();
+
 POE::Component::Server::TCP->new(
   Port => $port,
   ClientError => sub {
@@ -68,6 +71,10 @@ POE::Component::Server::TCP->new(
 
     $counter++;
 
+    if($request =~ m/BuildManifest/) {
+        $kernel->yield('build_manifest');
+    }
+
     if($request =~ m/Posting/) {
       $kernel->yield('trans_response' => $request);
     }else{
@@ -78,6 +85,7 @@ POE::Component::Server::TCP->new(
   InlineStates => {
       trans_response      => \&transResponse,
       manifest_response   => \&manifestResponse,
+      build_manifest      => \&buildManifest,
       send_it             => \&sendIt
    }
 );
@@ -86,7 +94,6 @@ POE::Component::Server::TCP->new(
 #
 sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
-    my $manifest = buildManifest($request);
     say "sending $count records of passenger manifest...";
     say "$manifest\n";
 
@@ -174,7 +181,7 @@ sub buildManifest {
 
     $record .= $ETX."_";
 
-    return $record;
+    $manifest = $record;
 }
 
 say "Starting server on port $port";
