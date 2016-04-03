@@ -154,17 +154,21 @@ sub buildManifest {
         my $uuid  = $ug->create();
         my $str   = $ug->to_string( $uuid );
         my $folio = $str;
+        my $lname = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->last_name;
+        my $fname = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->first_name;
+        my $cabin = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->username;
+
         my @arr = (
                 "ACI=$folio",
                 "ACT=".$CorP,
                 "ENB=1",
-                "CAB=".$faker->username,
-                "EMB=".$now,
+                "CAB=$cabin",
+                "EMB=$now",
                 "DIS=$expiration",
                 "DOB=1981-01-01",
                 "BAL=$balance",
-                "FST=".$faker->first_name,
-                "LST=".$faker->last_name,
+                "FST=$fname",
+                "LST=$lname",
                 "EML=".$faker->email,
                 "GND=".$gender,
                 "MIN=".$minor,
