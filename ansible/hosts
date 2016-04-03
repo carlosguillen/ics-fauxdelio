@@ -13,12 +13,12 @@ ships
 centrals
 
 [integration]
-mtn-ics-integ
-myinteg
-10.200.96.51
+mtn-ics-integ ansible_hostname=mtn-ics-integ ansible_fqdn=mtn-ics-integ facility_id=10028
+myinteg ansible_hostname=myinteg ansible_fqdn=myinteg facility_id=10028
+10.200.96.51 facility_id=10028
 
 [staging]
-mtn-ics-staging
+mtn-ics-staging ansible_hostname=mtn-ics-staging ansible_fqdn=mtn-ics-staging facility_id=10028
 
 [production]
 
