@@ -154,8 +154,8 @@ sub buildManifest {
         my $uuid  = $ug->create();
         my $str   = $ug->to_string( $uuid );
         my $folio = $str;
+        my $fname = $faker->first_name;
         my $lname = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->last_name;
-        my $fname = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->first_name;
         my $cabin = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->username;
 
         my @arr = (
