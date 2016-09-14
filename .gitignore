@@ -19,3 +19,4 @@ nytprof.out
 *.bs
 /_eumm/
 build_number.json
+.DS_Store
