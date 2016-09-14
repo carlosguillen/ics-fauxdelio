@@ -4,6 +4,7 @@ present: 'present'
 started: 'started'
 reloaded: 'reloaded'
 min_ansible_version: '1.9.2'
+ansible_ver_required: 2.0
 
 app_name: 'fauxdelio'
 registry_url: 'docker-hub-int.mtnsat.io'

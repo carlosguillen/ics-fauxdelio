@@ -2,7 +2,7 @@
 use strict;
 use v5.22.1;
 use warnings;
-use Data::Faker;
+use Data::Faker qw();
 use Data::Dumper;
 use Getopt::Long;
 use Const::Fast;
@@ -28,6 +28,9 @@ my $lastSent = 0;
 my $connected = 0;
 my ($delay, $port, @requests, $manifest, $count);
 
+my $faker = Data::Faker->new();
+my %fakeData;
+
 
 my $postingResponse = <DATA>;
 
@@ -39,9 +42,10 @@ my $opts = GetOptions(
 
 $delay = 1 unless defined $delay;
 $port = 2019 unless defined $port;
-$count = 10 unless defined $count;
+$count = 3 unless defined $count;
 
 
+populateFakeData();
 buildManifest();
 
 POE::Component::Server::TCP->new(
@@ -55,8 +59,8 @@ POE::Component::Server::TCP->new(
     my ($kernel, $heap, $request) = @_[KERNEL, HEAP, ARG0];
     say "got a connection from client";
     $connected = 1;
-    $kernel->delay('send_it' => $delay);
-    $heap->{client}->put('hello');
+    #$kernel->delay('send_it' => $delay);
+    #$heap->{client}->put('hello');
   },
   ClientDisconnected => sub {
     my ($kernel, $head, $args) = @_[KERNEL, HEAP, ARG0];
@@ -141,54 +145,91 @@ sub buildManifest {
     my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$now");
     my $record = $STX.join($US, @headerFields);
 
-    #$letter = '' unless defined $letter;
-
     my $ug    = Data::UUID->new;
-
     foreach my $cntr (1..$count){
-        my $faker = Data::Faker->new();
+        say "creating record $cntr";
+
         my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
-        my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
+        #my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
+        my $expiration = '2019-01-01';
         my $minor = 'N';
         my $balance = $cntr + 1000;
+        my $creditLimit = $balance + 20;
         my $uuid  = $ug->create();
-        my $str   = $ug->to_string( $uuid );
+        my $str   = substr($ug->to_string( $uuid ), 0, 5);
         my $folio = $str;
-        my $fname = $faker->first_name;
-        my $lname = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->last_name;
-        my $cabin = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->username;
+        my $shipemail =  'FREEALL';
 
         my @arr = (
-                "ACI=$folio",
-                "ACT=".$CorP,
-                "ENB=1",
-                "CAB=$cabin",
-                "EMB=$now",
-                "DIS=$expiration",
-                "DOB=1981-01-01",
-                "BAL=$balance",
-                "FST=$fname",
-                "LST=$lname",
-                "EML=".$faker->email,
-                "GND=".$gender,
-                "MIN=".$minor,
-                "ADD=".$faker->street_address,
-                "CTY=".$faker->city,
-                "STT=FL",
-                "PIN=$folio",
-                "AWD=INT100",
-                "CLM=$balance"
+                "ACI$cntr=$folio",
+                "ACT$cntr=".$CorP,
+                "ENB$cntr=1",
+                "CAB$cntr=".$fakeData{$cntr}->{'CAB'},
+                "EMB$cntr=$now",
+                "DIS$cntr=$expiration",
+                "DOB$cntr=1981-01-01",
+                "BAL$cntr=$balance",
+                "FST$cntr=".$fakeData{$cntr}->{'FST'},
+                "LST$cntr=".$fakeData{$cntr}->{'LST'},
+                "EML$cntr=".$fakeData{$cntr}->{'EML'},
+                "SML$cntr=".$fakeData{$cntr}->{'SML'},
+                "GND$cntr=".$gender,
+                "MIN$cntr=".$minor,
+                "ADD$cntr=".$fakeData{$cntr}->{'ADD'},
+                "CTY$cntr=".$fakeData{$cntr}->{'CTY'},
+                "STT$cntr=FL",
+                "PIN$cntr=$folio",
+                #"AWD$cntr=".$fakeData{$cntr}->{'CS1'},
+                "CLM$cntr=$creditLimit",
+                #"CS1$cntr=".$fakeData{$cntr}->{'CS1'},
+                #        "CS2$cntr=".$fakeData{$cntr}->{'CS2'}
             );
-        $record .= $US.join($US, @arr);
-        say join(',', @arr), "\n";
+
+        say $fakeData{$cntr}->{'CS2'};
+
+        my $newRec = join($US, @arr);
+        say join('|',@arr);
+
+        $record .= $US . $newRec;
     }
 
-    $record .= $ETX."_";
+    $record .= $ETX;
 
-    $manifest = $record;
+    $manifest = withCheckSum($record);
+    return;
+}
+
+sub withCheckSum {
+    my ($stringValue) = @_;
+    my $xor;
+
+    my @myVal = split //, $stringValue;
+
+    foreach my $val(split(//,$stringValue)){
+         $xor ^= $val;
+    }
+
+    return $stringValue . $xor;
 }
 
 say "Starting server on port $port";
+
+sub populateFakeData {
+
+    foreach my $cntr (1..$count){
+        my $cs1 = ($cntr % 2 == 0) ? 'CHI250' : 'UNLIT';
+        my $cs2 = ($cntr % 2 == 0) ? 'CSWEBE' : 'CSWEBV';
+
+        $fakeData{$cntr}->{'FST'} = $faker->first_name;
+        $fakeData{$cntr}->{'LST'} = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->last_name;
+        $fakeData{$cntr}->{'ADD'} = $faker->street_address;
+        $fakeData{$cntr}->{'CTY'} = $faker->city;
+        $fakeData{$cntr}->{'CAB'} = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->username;
+        $fakeData{$cntr}->{'CS1'} = $cs1;
+        $fakeData{$cntr}->{'CS2'} = $cs2;
+    }
+
+}
 
 $poe_kernel->run();
 
