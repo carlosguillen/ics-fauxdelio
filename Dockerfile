@@ -14,4 +14,4 @@ RUN mkdir -p /opt/fauxdelio
 ADD fauxdelio.pl /opt/fauxdelio/fauxdelio.pl
 
 RUN rm /var/cache/apk/*
-RUN rm -rf /root/.cpanm/*
+# RUN rm -rf /root/.cpanm/*
