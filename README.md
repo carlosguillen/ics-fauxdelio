@@ -14,3 +14,4 @@ host > bash runner.sh
 
 Presently deployed to mtn-corpinteg.mtnsat.io port 2019
 
+![DsiPMS Config](https://raw.githubusercontent.com/mtnsat/ics-fauxdelio/master/assets/DsiPmsConfig.png)
