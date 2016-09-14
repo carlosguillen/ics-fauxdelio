@@ -44,8 +44,6 @@ $delay = 1 unless defined $delay;
 $port = 2019 unless defined $port;
 $count = 3 unless defined $count;
 
-
-populateFakeData();
 buildManifest();
 
 POE::Component::Server::TCP->new(
@@ -99,7 +97,7 @@ POE::Component::Server::TCP->new(
 sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
     say "sending $count records of passenger manifest...";
-    say "$manifest\n";
+    #say "$manifest\n";
 
     if ($connected){
       $heap->{client}->put($manifest);
@@ -146,6 +144,7 @@ sub buildManifest {
     my $record = $STX.join($US, @headerFields);
 
     my $ug    = Data::UUID->new;
+
     foreach my $cntr (1..$count){
         say "creating record $cntr";
 
@@ -164,31 +163,29 @@ sub buildManifest {
                 "ACI$cntr=$folio",
                 "ACT$cntr=".$CorP,
                 "ENB$cntr=1",
-                "CAB$cntr=".$fakeData{$cntr}->{'CAB'},
+                "CAB$cntr=".$faker->username,
                 "EMB$cntr=$now",
                 "DIS$cntr=$expiration",
                 "DOB$cntr=1981-01-01",
                 "BAL$cntr=$balance",
-                "FST$cntr=".$fakeData{$cntr}->{'FST'},
-                "LST$cntr=".$fakeData{$cntr}->{'LST'},
-                "EML$cntr=".$fakeData{$cntr}->{'EML'},
-                "SML$cntr=".$fakeData{$cntr}->{'SML'},
+                "FST$cntr=".$faker->first_name,
+                "LST$cntr=".$faker->last_name,
+                "EML$cntr=".$faker->email,
+                "SML$cntr=".$faker->email,
                 "GND$cntr=".$gender,
                 "MIN$cntr=".$minor,
-                "ADD$cntr=".$fakeData{$cntr}->{'ADD'},
-                "CTY$cntr=".$fakeData{$cntr}->{'CTY'},
+                "ADD$cntr=".$faker->street_address,
+                "CTY$cntr=".$faker->city,
                 "STT$cntr=FL",
                 "PIN$cntr=$folio",
-                #"AWD$cntr=".$fakeData{$cntr}->{'CS1'},
+                "AWD$cntr=CHI250",
                 "CLM$cntr=$creditLimit",
-                #"CS1$cntr=".$fakeData{$cntr}->{'CS1'},
-                #        "CS2$cntr=".$fakeData{$cntr}->{'CS2'}
+                "CS1$cntr=CHI250",
+                "CS2$cntr=CSWEBV"
             );
 
-        say $fakeData{$cntr}->{'CS2'};
-
         my $newRec = join($US, @arr);
-        say join('|',@arr);
+        #say join('|',@arr);
 
         $record .= $US . $newRec;
     }
@@ -214,22 +211,6 @@ sub withCheckSum {
 
 say "Starting server on port $port";
 
-sub populateFakeData {
-
-    foreach my $cntr (1..$count){
-        my $cs1 = ($cntr % 2 == 0) ? 'CHI250' : 'UNLIT';
-        my $cs2 = ($cntr % 2 == 0) ? 'CSWEBE' : 'CSWEBV';
-
-        $fakeData{$cntr}->{'FST'} = $faker->first_name;
-        $fakeData{$cntr}->{'LST'} = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->last_name;
-        $fakeData{$cntr}->{'ADD'} = $faker->street_address;
-        $fakeData{$cntr}->{'CTY'} = $faker->city;
-        $fakeData{$cntr}->{'CAB'} = ($cntr == 1 || $cntr == 2) ? 'DUPE' : $faker->username;
-        $fakeData{$cntr}->{'CS1'} = $cs1;
-        $fakeData{$cntr}->{'CS2'} = $cs2;
-    }
-
-}
 
 $poe_kernel->run();
 
