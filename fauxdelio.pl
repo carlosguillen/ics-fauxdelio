@@ -52,7 +52,7 @@ POE::Component::Server::TCP->new(
     my ($syscall_name, $error_num, $error_str) = @_[ARG0..ARG2];
     say "Got client error $error_str";
   },
-  ClientFilter => POE::Filter::Line->new(Literal => $ETX),
+  ClientFilter => POE::Filter::Line->new( OutputLiteral => "", InputLiteral => $ETX),
   ClientConnected => sub {
     my ($kernel, $heap, $request) = @_[KERNEL, HEAP, ARG0];
     say "got a connection from client";
@@ -185,15 +185,14 @@ sub buildManifest {
             );
 
         my $newRec = join($US, @arr);
-        #say join('|',@arr);
 
         $record .= $US . $newRec;
     }
 
     $record .= $ETX;
 
-    $manifest = withCheckSum($record);
-    return;
+    my $finalString = withCheckSum($record);
+    $manifest = $finalString;
 }
 
 sub withCheckSum {
@@ -206,7 +205,8 @@ sub withCheckSum {
          $xor ^= $val;
     }
 
-    return $stringValue . $xor;
+    my $finalString = $stringValue . $xor;
+    return $finalString;
 }
 
 say "Starting server on port $port";
