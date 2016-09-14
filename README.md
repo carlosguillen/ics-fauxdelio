@@ -12,4 +12,5 @@ host > docker build -t perls:poe .
 host > bash runner.sh
 ```
 
-Why a Docker image to run a script? Mostly because of the module deps and the fact that it can be extended to do other things
+Presently deployed to mtn-corpinteg.mtnsat.io port 2019
+
