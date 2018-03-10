@@ -44,6 +44,13 @@ $delay = 1 unless defined $delay;
 $port = 2019 unless defined $port;
 $count = 3 unless defined $count;
 
+
+my @CorP = ('P', 'C');
+my @genders = ('M', 'F');
+my @loyaltyGroups = ('TEST', '', 'INTCON', 'TOP30');
+#'INT100,INT60,CHI250,TP100', 'CSWEBE', 'UNLINT', 'VERY BAD');
+my @cabins = ('6002', '000', '8086');
+
 buildManifest();
 
 POE::Component::Server::TCP->new(
@@ -70,6 +77,8 @@ POE::Component::Server::TCP->new(
   },
   ClientInput => sub {
     my ($kernel, $heap, $request) = @_[KERNEL, HEAP, ARG0];
+
+    say "got input $request";
 
     $counter++;
 
@@ -148,7 +157,6 @@ sub buildManifest {
     foreach my $cntr (1..$count){
         say "creating record $cntr";
 
-        my ($CorP, $gender) = ($cntr % 2 == 0) ? ('P', 'F') : ('C', 'M');
         #my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
         my $expiration = '2019-01-01';
         my $minor = 'N';
@@ -157,13 +165,12 @@ sub buildManifest {
         my $uuid  = $ug->create();
         my $str   = substr($ug->to_string( $uuid ), 0, 5);
         my $folio = $str;
-        my $shipemail =  'FREEALL';
 
         my @arr = (
                 "ACI$cntr=$folio",
-                "ACT$cntr=".$CorP,
+                "ACT$cntr=P",
                 "ENB$cntr=1",
-                "CAB$cntr=".$faker->username,
+                "CAB$cntr=".getRandom(@cabins),
                 "EMB$cntr=$now",
                 "DIS$cntr=$expiration",
                 "DOB$cntr=1981-01-01",
@@ -171,17 +178,20 @@ sub buildManifest {
                 "FST$cntr=".$faker->first_name,
                 "LST$cntr=".$faker->last_name,
                 "EML$cntr=".$faker->email,
-                "SML$cntr=".$faker->email,
-                "GND$cntr=".$gender,
+                "SML$cntr=".getRandom(@loyaltyGroups),
+                "GND$cntr=".getRandom(@genders),
                 "MIN$cntr=".$minor,
                 "ADD$cntr=".$faker->street_address,
                 "CTY$cntr=".$faker->city,
                 "STT$cntr=FL",
                 "PIN$cntr=$folio",
-                "AWD$cntr=CHI250",
+                "AWD$cntr=TEST",
                 "CLM$cntr=$creditLimit",
-                "CS1$cntr=CHI250",
-                "CS2$cntr=CSWEBV"
+                "CS1$cntr=",
+                "CS2$cntr=",
+                "CS3$cntr=".getRandom(@loyaltyGroups),
+                "CS4$cntr=",#.getRandom(@loyaltyGroups),
+                "CS5$cntr=".getRandom(@loyaltyGroups)
             );
 
         my $newRec = join($US, @arr);
@@ -193,6 +203,12 @@ sub buildManifest {
 
     my $finalString = withCheckSum($record);
     $manifest = $finalString;
+}
+
+sub getRandom {
+    my (@arr) = @_;
+    my $item = $arr[ rand @arr ];
+    return $item;
 }
 
 sub withCheckSum {
