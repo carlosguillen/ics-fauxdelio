@@ -45,11 +45,13 @@ $port = 2019 unless defined $port;
 $count = 3 unless defined $count;
 
 
-my @CorP = ('P', 'C');
+my @CorP = ('P');
 my @genders = ('M', 'F');
-my @loyaltyGroups = ('TEST', '', 'INTCON', 'TOP30');
-#'INT100,INT60,CHI250,TP100', 'CSWEBE', 'UNLINT', 'VERY BAD');
-my @cabins = ('6002', '000', '8086');
+my @loyaltyGroups = ('GOLD', '');
+
+my @cabins = ('1000', '1000', '8086', '1000');
+my @nationalities = ('US', 'CA', 'CH');
+#my @cabins = ('0000','1111');
 
 buildManifest();
 
@@ -106,7 +108,7 @@ POE::Component::Server::TCP->new(
 sub manifestResponse {
     my ($kernel, $heap, $request) =  @_[KERNEL, HEAP, ARG0];
     say "sending $count records of passenger manifest...";
-    #say "$manifest\n";
+    say "$manifest\n";
 
     if ($connected){
       $heap->{client}->put($manifest);
@@ -135,7 +137,7 @@ sub sendIt {
 
     if (@requests > 0 && $connected == 1) {
       my $new_response = pop(@requests);
-      say "sending message to client";
+      say "sending message to client $new_response";
       $heap->{client}->put($new_response);
     }
     $kernel->delay('send_it' => $delay);
@@ -164,13 +166,14 @@ sub buildManifest {
         my $creditLimit = $balance + 20;
         my $uuid  = $ug->create();
         my $str   = substr($ug->to_string( $uuid ), 0, 5);
-        my $folio = $str;
+        my $folio = "$str$cntr";
 
         my @arr = (
                 "ACI$cntr=$folio",
-                "ACT$cntr=P",
+                "ACT$cntr=".getRandom(@CorP),
                 "ENB$cntr=1",
                 "CAB$cntr=".getRandom(@cabins),
+                "NAT$cntr=".getRandom(@nationalities),
                 "EMB$cntr=$now",
                 "DIS$cntr=$expiration",
                 "DOB$cntr=1981-01-01",
@@ -179,19 +182,17 @@ sub buildManifest {
                 "LST$cntr=".$faker->last_name,
                 "EML$cntr=".$faker->email,
                 "SML$cntr=".getRandom(@loyaltyGroups),
+                "FRQ$cntr=".getRandom(@loyaltyGroups),
+                "FRQ$cntr=",
                 "GND$cntr=".getRandom(@genders),
                 "MIN$cntr=".$minor,
                 "ADD$cntr=".$faker->street_address,
                 "CTY$cntr=".$faker->city,
                 "STT$cntr=FL",
                 "PIN$cntr=$folio",
-                "AWD$cntr=TEST",
+                "AWD$cntr=".getRandom(@loyaltyGroups),
                 "CLM$cntr=$creditLimit",
-                "CS1$cntr=",
-                "CS2$cntr=",
-                "CS3$cntr=".getRandom(@loyaltyGroups),
-                "CS4$cntr=",#.getRandom(@loyaltyGroups),
-                "CS5$cntr=".getRandom(@loyaltyGroups)
+                "CS1$cntr=".getRandom(@loyaltyGroups)
             );
 
         my $newRec = join($US, @arr);
@@ -232,3 +233,4 @@ $poe_kernel->run();
 
 __DATA__
 PostingResponseREF=DsiServerRQN=XXXXXXDTE=2015-10-22 04:00:12ACI=894854ACT=PNAM=MRS BARBARA BAILEYCAB=7031EMB=2010-03-18 00:00:00DIS=2010-03-31 00:00:00BAL=1071193CRU=1581POI=1445544012OCI=940285PTI=1573223
+
