@@ -47,9 +47,9 @@ $count = 3 unless defined $count;
 
 my @CorP = ('P');
 my @genders = ('M', 'F');
-my @loyaltyGroups = ('GOLD', '');
+my @loyaltyGroups = ("WAVESBLACK", "WFSO", "WFNA", "WFCO", "WFCO", "PWC1", "PWC2", "PWN1", "PWN2", "PWS1", "PWS2", "FREE100");
 
-my @cabins = ('1000', '1000', '8086', '1000');
+my @cabins = ('1000');
 my @nationalities = ('US', 'CA', 'CH');
 #my @cabins = ('0000','1111');
 
@@ -149,9 +149,9 @@ sub buildManifest {
     #my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
 
     my $today = POSIX::strftime("%s", localtime);
-    my $now = POSIX::strftime("%Y-%m-%d %T%z", localtime);
-
-    my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$now");
+    my $embarkation = POSIX::strftime("%Y-%m-%d %T%z", localtime);
+    my $expiration = '2020-12-31';
+    my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$today");
     my $record = $STX.join($US, @headerFields);
 
     my $ug    = Data::UUID->new;
@@ -159,8 +159,6 @@ sub buildManifest {
     foreach my $cntr (1..$count){
         say "creating record $cntr";
 
-        #my $expiration = ($cntr == $count) ? '2016-01-01' : '2019-01-01';
-        my $expiration = '2019-01-01';
         my $minor = 'N';
         my $balance = $cntr + 1000;
         my $creditLimit = $balance + 20;
@@ -174,7 +172,7 @@ sub buildManifest {
                 "ENB$cntr=1",
                 "CAB$cntr=".getRandom(@cabins),
                 "NAT$cntr=".getRandom(@nationalities),
-                "EMB$cntr=$now",
+                "EMB$cntr=$embarkation",
                 "DIS$cntr=$expiration",
                 "DOB$cntr=1981-01-01",
                 "BAL$cntr=$balance",
@@ -183,7 +181,6 @@ sub buildManifest {
                 "EML$cntr=".$faker->email,
                 "SML$cntr=".getRandom(@loyaltyGroups),
                 "FRQ$cntr=".getRandom(@loyaltyGroups),
-                "FRQ$cntr=",
                 "GND$cntr=".getRandom(@genders),
                 "MIN$cntr=".$minor,
                 "ADD$cntr=".$faker->street_address,
