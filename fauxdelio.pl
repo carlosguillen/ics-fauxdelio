@@ -189,7 +189,8 @@ sub buildManifest {
                 "PIN$cntr=$folio",
                 "AWD$cntr=".getRandom(@loyaltyGroups),
                 "CLM$cntr=$creditLimit",
-                "CS1$cntr=".getRandom(@loyaltyGroups)
+                "CS1$cntr=".getRandom(@loyaltyGroups),
+                "TEL$cntr=$cntr-8675309"
             );
 
         my $newRec = join($US, @arr);
