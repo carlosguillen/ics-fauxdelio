@@ -48,10 +48,9 @@ $count = 3 unless defined $count;
 my @CorP = ('P');
 my @genders = ('M', 'F');
 my @loyaltyGroups = ("WAVESBLACK", "WFSO", "WFNA", "WFCO", "WFCO", "PWC1", "PWC2", "PWN1", "PWN2", "PWS1", "PWS2", "FREE100");
-
-my @cabins = ('1000');
+my $totalCabins = $count / 2;
+my @cabins = (1000..$totalCabins + 1000);
 my @nationalities = ('US', 'CA', 'CH');
-#my @cabins = ('0000','1111');
 
 buildManifest();
 
