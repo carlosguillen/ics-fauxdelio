@@ -146,10 +146,11 @@ sub buildManifest {
 
     #my ($request) = @_;
     #my ($letter) = $request =~ m/ACI=([A-Z])(?{$US})/;
+    #
+    #say "$letter  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
     my $today = POSIX::strftime("%s", localtime);
     my $embarkation = POSIX::strftime("%Y-%m-%d %T%z", localtime);
-    my $expiration = '2020-12-31';
     my @headerFields = ("InquireResponse", "REF=DsiServer", "RQN=$today", "DTE=$today");
     my $record = $STX.join($US, @headerFields);
 
@@ -158,6 +159,7 @@ sub buildManifest {
     foreach my $cntr (1..$count){
         say "creating record $cntr";
 
+        my $expiration = POSIX::strftime("%Y-%m-%d %T%z", localtime (time + (86400 * (30 + $cntr))));
         my $minor = 'N';
         my $balance = $cntr + 1000;
         my $creditLimit = $balance + 20;
@@ -165,18 +167,31 @@ sub buildManifest {
         my $str   = substr($ug->to_string( $uuid ), 0, 5);
         my $folio = "$str$cntr";
 
+        my $firstname = $faker->first_name;
+        my $lastname = $faker->last_name;
+        my $cabin = getRandom(@cabins);
+        my $dob = "1981-01-01";
+
+        if ($cntr == 1){
+            $folio = "FIXEDFOLIO";
+            $firstname = "carlitos";
+            $lastname = "way";
+            $cabin = "44";
+            $dob = "2019-11-01";
+        }
+
         my @arr = (
                 "ACI$cntr=$folio",
                 "ACT$cntr=".getRandom(@CorP),
                 "ENB$cntr=1",
-                "CAB$cntr=".getRandom(@cabins),
+                "CAB$cntr=$cabin",
                 "NAT$cntr=".getRandom(@nationalities),
                 "EMB$cntr=$embarkation",
                 "DIS$cntr=$expiration",
-                "DOB$cntr=1981-01-01",
+                "DOB$cntr=$dob",
                 "BAL$cntr=$balance",
-                "FST$cntr=".$faker->first_name,
-                "LST$cntr=".$faker->last_name,
+                "FST$cntr=$firstname",
+                "LST$cntr=$lastname",
                 "EML$cntr=".$faker->email,
                 "SML$cntr=".getRandom(@loyaltyGroups),
                 "FRQ$cntr=".getRandom(@loyaltyGroups),
