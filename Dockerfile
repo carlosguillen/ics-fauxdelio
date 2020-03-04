@@ -1,4 +1,4 @@
-FROM marcelmaatkamp/alpine-base
+FROM alpine:3.7
 
 # add packages
 RUN apk update && apk upgrade && \
